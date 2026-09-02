@@ -1,0 +1,320 @@
+# HandProGaming — Historias de usuario del MVP
+
+> **Cómo usar este archivo:** cada historia es una unidad de trabajo pedible a v0.app o Lovable.
+> Pide **una historia por prompt**, adjuntando siempre el contexto de `proyect-info.mdc`.
+> Los bloques *Pantalla*, *Componentes* y *Casos borde* son los que hacen que el generador
+> produzca algo usable en lugar de una maqueta bonita pero vacía.
+>
+> **Formato de cada historia**
+> `HUxx — Título (puntos) · Rol · Épica · Prioridad`
+> · Historia (Como / Quiero / Para) · Criterios de aceptación (Dado / Cuando / Entonces)
+> · Pantalla y ruta · Componentes clave · Casos borde · Fuera de alcance
+>
+> **Prioridad:** `P0` = imprescindible para la demo · `P1` = importante · `P2` = deseable.
+> **Total estimado: 18.1 puntos.**
+
+---
+
+## Índice y trazabilidad
+
+| HU | Título | Pts | Rol | Prioridad | Ruta principal |
+|---|---|---:|---|:--:|---|
+| HU14 | Iniciar sesión | 1.2 | Todos | P0 | `/login` |
+| HU15 | Registrarse con rol | 1.2 | Todos | P0 | `/registro` |
+| HU16 | Interfaz visual e intuitiva | 1.2 | Todos | P0 | transversal |
+| HU05 | Manipulación de bloques | 1.8 | Estudiante | P0 | `/editor` |
+| HU03 | Funciones secuenciales | 2 | Estudiante | P0 | `/editor` |
+| HU01 | Ejecución mediante gestos | 2 | Estudiante | P0 | `/editor` |
+| HU18 | Modo teclado | 3 | Estudiante | P0 | `/editor` |
+| HU13 | Matricular cursos | 0.6 | Estudiante | P0 | `/estudiante/cursos` |
+| HU07 | Asignar actividades | 1 | Profesor | P0 | `/profesor/actividades/[id]` |
+| HU08 | Acceder y entregar actividades | 1.5 | Estudiante | P0 | `/estudiante/actividades/[id]` |
+| HU06 | Retroalimentación del profesor | 0.8 | Ambos | P1 | `/profesor/entregas/[id]` |
+| HU10 | Matemática básica | 0.6 | Estudiante | P1 | `/editor` |
+| HU09 | Ciclos básicos | 0.2 | Estudiante | P1 | `/editor` |
+| HU04 | Tutorial de gestos | 0.6 | Todos | P1 | `/estudiante/tutorial` |
+| HU02 | Administrar todas las cuentas | 0.4 | Admin | P2 | `/admin/usuarios` |
+
+---
+
+# Épica A — Acceso y cuentas
+
+## HU14 — Iniciar sesión (1.2) · Todos · P0
+
+**COMO** usuario de la plataforma educativa
+**QUIERO** iniciar sesión con mis credenciales
+**PARA** acceder de forma segura a las funcionalidades que me corresponden según mi rol.
+
+- **Criterio 1:** DADO que tengo credenciales registradas, CUANDO ingreso correo y contraseña correctos, ENTONCES el sistema me autentica y me redirige al panel de mi rol (`/estudiante`, `/profesor` o `/admin`).
+- **Criterio 2:** DADO que ingreso credenciales incorrectas, CUANDO intento iniciar sesión, ENTONCES el sistema muestra el mensaje *"Correo o contraseña incorrectos"* bajo el formulario, mantiene lo escrito en el campo de correo y no me da acceso.
+- **Criterio 3:** DADO que dejo un campo obligatorio vacío, CUANDO envío el formulario, ENTONCES se marca el campo en rojo con su mensaje y no se realiza el intento de acceso.
+
+**Pantalla:** `/login` — tarjeta centrada, logo, formulario y enlace a registro.
+**Componentes:** `Card`, `Input` (correo, contraseña con botón mostrar/ocultar), `Button` con estado de carga, alerta de error en línea, y **tres botones de acceso demo** ("Entrar como Estudiante / Profesor / Administrador").
+**Casos borde:** botón deshabilitado mientras se envía; sesión persistida al recargar; si ya hay sesión, redirigir al panel correspondiente.
+**Fuera de alcance:** recuperar contraseña, verificación por correo, inicio de sesión con Google.
+
+---
+
+## HU15 — Registrarse seleccionando rol (1.2) · Todos · P0
+
+**COMO** usuario nuevo de la plataforma
+**QUIERO** registrarme eligiendo mi rol entre Estudiante, Profesor o Administrador
+**PARA** contar con un perfil acorde a mis funciones dentro de la plataforma.
+
+- **Criterio 1:** DADO que estoy en el formulario de registro, CUANDO ingreso mis datos y selecciono uno de los tres roles, ENTONCES el sistema crea la cuenta con ese rol y me lleva a mi panel.
+- **Criterio 2:** DADO que no he seleccionado un rol, CUANDO intento completar el registro, ENTONCES el sistema me solicita elegir uno antes de continuar.
+- **Criterio 3:** DADO que el correo ya está registrado, CUANDO envío el formulario, ENTONCES el sistema informa *"Este correo ya tiene una cuenta"* y ofrece ir a iniciar sesión.
+
+**Pantalla:** `/registro`.
+**Componentes:** campos nombre, correo, contraseña y confirmación; **selector de rol en tres tarjetas seleccionables** (icono + nombre + una línea que explica qué puede hacer ese rol); indicador de fuerza de contraseña (mínimo 8 caracteres).
+**Casos borde:** contraseñas que no coinciden; correo con formato inválido; el rol debe verse claramente seleccionado (borde e icono de check).
+**Fuera de alcance:** captcha, aceptación de términos con documento legal real.
+
+---
+
+## HU02 — Administrar todas las cuentas (0.4) · Administrador · P2
+
+**COMO** administrador de la plataforma
+**QUIERO** consultar y gestionar todas las cuentas de usuario
+**PARA** mantener el control de quién accede a la plataforma y con qué rol.
+
+- **Criterio 1:** DADO que soy administrador, CUANDO entro a la gestión de usuarios, ENTONCES veo una tabla con nombre, correo, rol, estado y fecha de creación de todas las cuentas.
+- **Criterio 2:** DADO que necesito corregir un perfil, CUANDO cambio el rol de un usuario y confirmo, ENTONCES el sistema actualiza el rol y muestra una confirmación.
+- **Criterio 3:** DADO que un usuario ya no debe acceder, CUANDO lo desactivo, ENTONCES su estado pasa a "Inactivo" y no puede iniciar sesión.
+- **Criterio 4:** DADO que busco una cuenta específica, CUANDO escribo en el buscador, ENTONCES la tabla filtra por nombre o correo en tiempo real.
+
+**Pantalla:** `/admin/usuarios` (y `/admin` con métricas: usuarios por rol, cursos y actividades).
+**Componentes:** `Table` con paginación, buscador, filtro por rol, `Badge` de estado, menú de acciones por fila y diálogo de confirmación para acciones destructivas.
+**Casos borde:** el administrador no puede desactivarse ni cambiarse el rol a sí mismo; estado vacío del buscador ("Ningún usuario coincide con la búsqueda").
+**Fuera de alcance:** auditoría de accesos, importación masiva, permisos granulares.
+
+---
+
+# Épica B — Cursos y actividades
+
+## HU13 — Matricular cursos (0.6) · Estudiante · P0
+
+**COMO** estudiante de la plataforma
+**QUIERO** matricularme en un curso disponible
+**PARA** acceder a su contenido educativo y a sus actividades.
+
+- **Criterio 1:** DADO que estoy autenticado y existe un curso disponible, CUANDO selecciono "Matricularme", ENTONCES el sistema registra la matrícula, muestra una confirmación y el curso aparece en "Mis cursos".
+- **Criterio 2:** DADO que ya estoy matriculado en un curso, CUANDO lo veo en el catálogo, ENTONCES aparece marcado como "Ya inscrito" con el botón deshabilitado, evitando una matrícula duplicada.
+
+**Pantalla:** `/estudiante/cursos` — dos secciones: "Mis cursos" y "Catálogo disponible".
+**Componentes:** tarjetas de curso con color, nombre, profesor, número de actividades y botón de acción; buscador por nombre.
+**Casos borde:** catálogo vacío ("Aún no hay cursos publicados"); estado de carga del botón durante la matrícula.
+**Fuera de alcance:** cursos con clave de acceso, cupos limitados, desmatricularse.
+
+---
+
+## HU07 — Asignar actividades (1) · Profesor · P0
+
+**COMO** profesor
+**QUIERO** asignar actividades a los estudiantes de mi curso
+**PARA** que desarrollen ejercicios acordes a sus necesidades de aprendizaje.
+
+- **Criterio 1:** DADO que tengo estudiantes matriculados, CUANDO selecciono uno o varios estudiantes y una actividad, ENTONCES el sistema registra la asignación y confirma cuántos estudiantes la recibieron.
+- **Criterio 2:** DADO que ya asigné una actividad, CUANDO consulto sus asignaciones, ENTONCES veo el estudiante, la actividad, la fecha y el estado (Pendiente / En progreso / Entregada / Revisada).
+- **Criterio 3:** DADO que intento asignar sin seleccionar estudiantes, CUANDO presiono "Asignar", ENTONCES el botón está deshabilitado con la indicación *"Selecciona al menos un estudiante"*.
+
+**Pantalla:** `/profesor/actividades/nueva` (crear) y `/profesor/actividades/[id]` (asignar y ver estado).
+**Componentes:** formulario con título, enunciado, dificultad, **bloques permitidos** (multiselección que limita la paleta del estudiante) y fecha límite; tabla de estudiantes con casillas y opción "seleccionar todos"; tabla de asignaciones con `Badge` de estado.
+**Casos borde:** reasignar a alguien que ya la tiene (avisar y omitirlo, no duplicar); curso sin estudiantes matriculados.
+**Fuera de alcance:** asignación automática por nivel, plantillas de actividades, recordatorios.
+
+---
+
+## HU08 — Acceder y entregar actividades (1.5) · Estudiante · P0
+
+**COMO** estudiante
+**QUIERO** acceder a las actividades que me asignaron y entregar mi solución
+**PARA** cumplir con los objetivos de aprendizaje del curso.
+
+- **Criterio 1:** DADO que tengo actividades asignadas, CUANDO entro a "Mis actividades", ENTONCES veo cada una con su curso, dificultad, fecha límite y estado, pudiendo filtrar por estado.
+- **Criterio 2:** DADO que abro una actividad pendiente, CUANDO ingreso a ella, ENTONCES veo el enunciado junto al editor de bloques, con la paleta limitada a los bloques permitidos por el profesor.
+- **Criterio 3:** DADO que tengo una actividad en progreso, CUANDO completo el programa y presiono "Entregar", ENTONCES el sistema guarda el programa y su salida, y cambia el estado a "Entregada".
+- **Criterio 4:** DADO que ya entregué una actividad, CUANDO la vuelvo a abrir, ENTONCES la veo en modo lectura con la fecha de entrega y, si existe, la retroalimentación del profesor.
+
+**Pantalla:** `/estudiante/actividades` (lista) y `/estudiante/actividades/[id]` (editor + enunciado).
+**Componentes:** filtros por estado, tarjetas de actividad, panel lateral con el enunciado colapsable, botón "Entregar" con diálogo de confirmación, toast de éxito.
+**Casos borde:** no permitir entregar un programa incompleto (sin `Inicio`/`Fin` o con bloques sueltos): explicar exactamente qué falta; guardado automático del avance para no perder trabajo; actividad vencida marcada como "Fuera de plazo".
+**Fuera de alcance:** reentregas múltiples con historial de versiones, calificación automática.
+
+---
+
+## HU06 — Retroalimentación del profesor (0.8) · Profesor y Estudiante · P1
+
+**COMO** estudiante que realiza actividades
+**QUIERO** recibir retroalimentación del profesor sobre mis entregas
+**PARA** identificar mis errores y mejorar mi aprendizaje.
+
+- **Criterio 1:** DADO que un estudiante entregó una actividad, CUANDO el profesor abre la entrega, ENTONCES puede ver el programa de bloques en modo lectura y la salida que produjo.
+- **Criterio 2:** DADO que el profesor revisa una entrega, CUANDO escribe un comentario y lo guarda, ENTONCES el sistema registra la retroalimentación y cambia el estado a "Revisada".
+- **Criterio 3:** DADO que tengo retroalimentación disponible, CUANDO abro la actividad correspondiente, ENTONCES veo el comentario del profesor, su calificación (si la puso) y la fecha de revisión.
+
+**Pantalla:** `/profesor/entregas` (bandeja) y `/profesor/entregas/[id]` (revisión).
+**Componentes:** vista de solo lectura del lienzo, consola con la salida obtenida, `Textarea` de comentario, calificación opcional de 1 a 5, botón "Guardar retroalimentación"; del lado del estudiante, un aviso destacado en su dashboard.
+**Casos borde:** entrega sin revisar (estado vacío en la bandeja: "No hay entregas pendientes"); comentario vacío no se guarda.
+**Fuera de alcance:** comentarios ancorados a un bloque específico, rúbricas, conversación en hilo.
+
+---
+
+# Épica C — Editor de bloques
+
+## HU05 — Manipulación de bloques (1.8) · Estudiante · P0
+
+**COMO** estudiante que realiza ejercicios prácticos
+**QUIERO** mover y conectar bloques de manera intuitiva
+**PARA** construir programas y comprobar su funcionamiento.
+
+- **Criterio 1:** DADO que estoy en el editor, CUANDO arrastro un bloque desde la paleta al lienzo, ENTONCES el bloque se crea en la posición donde lo solté.
+- **Criterio 2:** DADO que arrastro un bloque cerca de un punto de conexión válido, CUANDO lo suelto, ENTONCES el sistema lo acopla automáticamente (*snap*) mostrando antes una guía fantasma de dónde quedará.
+- **Criterio 3:** DADO que intento una conexión inválida (por ejemplo, colocar un bloque encima de "Inicio"), CUANDO lo suelto, ENTONCES el bloque vuelve a su posición previa y se muestra el aviso *"Ese bloque no puede ir ahí"*.
+- **Criterio 4:** DADO que tengo un bloque seleccionado, CUANDO lo elimino, ENTONCES desaparece del lienzo y los bloques que estaban conectados debajo se reacomodan sin romper la secuencia.
+
+**Pantalla:** `/editor` y el editor dentro de una actividad.
+**Componentes:** paleta con categorías colapsables y color por categoría, lienzo con cuadrícula y zoom, bloques con forma de encaje, papelera, botones de deshacer/rehacer.
+**Casos borde:** lienzo vacío con la sugerencia "Arrastra el bloque Inicio para comenzar"; arrastrar un bloque contenedor debe mover también su cuerpo anidado.
+**Fuera de alcance:** copiar y pegar entre programas, agrupar bloques en funciones propias.
+
+---
+
+## HU03 — Funciones secuenciales (2) · Estudiante · P0
+
+**COMO** estudiante que aprende programación
+**QUIERO** construir y ejecutar programas secuenciales con bloques de inicio, variables, entrada y salida
+**PARA** comprender que un programa se ejecuta paso a paso, en orden.
+
+- **Criterio 1:** DADO que armé una secuencia válida desde "Inicio" hasta "Fin", CUANDO presiono "Ejecutar", ENTONCES el sistema recorre los bloques en orden y muestra los resultados en la consola de salida.
+- **Criterio 2:** DADO que el programa se está ejecutando, CUANDO se procesa cada bloque, ENTONCES ese bloque se resalta visualmente para que yo pueda seguir el flujo.
+- **Criterio 3:** DADO que el programa incluye un bloque de entrada, CUANDO la ejecución llega a él, ENTONCES el sistema me solicita el valor y lo guarda en la variable indicada.
+- **Criterio 4:** DADO que el programa está incompleto (falta "Inicio", falta "Fin" o hay bloques sueltos), CUANDO intento ejecutarlo, ENTONCES el botón "Ejecutar" está deshabilitado y se indica exactamente qué falta.
+
+**Pantalla:** `/editor`, panel derecho con la **consola de salida**.
+**Componentes:** botones Ejecutar / Detener / Limpiar consola, consola con tipografía monoespaciada y marcas de tiempo, diálogo de entrada de datos, resaltado del bloque activo.
+**Casos borde:** usar una variable no declarada → error claro en consola señalando el bloque culpable; división entre cero; el bloque `Fin` detiene la ejecución.
+**Fuera de alcance:** ejecución paso a paso con breakpoints, control de velocidad, exportar a código.
+
+---
+
+## HU10 — Matemática básica (0.6) · Estudiante · P1
+
+**COMO** estudiante
+**QUIERO** realizar operaciones matemáticas y comparaciones con bloques
+**PARA** resolver ejercicios que requieren cálculos y decisiones.
+
+- **Criterio 1:** DADO que uso un bloque de operación, CUANDO elijo dos operandos (valores o variables) y un operador (`+`, `−`, `×`, `÷`, `%`), ENTONCES el sistema calcula el resultado y lo asigna a la variable indicada.
+- **Criterio 2:** DADO que uso un bloque condicional, CUANDO defino una comparación (`=`, `≠`, `<`, `>`, `≤`, `≥`) y ejecuto, ENTONCES el sistema evalúa la condición y ejecuta la rama correspondiente (*Si* o *Si no*).
+- **Criterio 3:** DADO que una operación no es válida (por ejemplo, dividir entre cero), CUANDO se ejecuta, ENTONCES la ejecución se detiene con un mensaje comprensible que señala el bloque donde ocurrió.
+
+**Pantalla:** `/editor` — categorías "Operadores" (morado) y "Control" (verde).
+**Componentes:** bloque de operación con dos campos y un selector de operador; bloque `Si / Si no` como contenedor con dos zonas de cuerpo claramente diferenciadas.
+**Casos borde:** operandos vacíos; mezcla de texto y número; anidar un condicional dentro de otro debe funcionar y verse legible.
+**Fuera de alcance:** funciones matemáticas avanzadas (raíz, potencia, trigonometría), operadores lógicos compuestos (`y` / `o`).
+
+---
+
+## HU09 — Ciclos básicos (0.2) · Estudiante · P1
+
+**COMO** estudiante
+**QUIERO** utilizar bloques de repetición
+**PARA** entender cómo se repiten instrucciones sin escribirlas muchas veces.
+
+- **Criterio 1:** DADO que uso el bloque "Repetir N veces", CUANDO coloco instrucciones en su cuerpo y ejecuto, ENTONCES esas instrucciones se ejecutan exactamente N veces.
+- **Criterio 2:** DADO que uso el bloque "Mientras", CUANDO defino una condición y ejecuto, ENTONCES el cuerpo se repite mientras la condición sea verdadera y se detiene cuando deja de serlo.
+- **Criterio 3:** DADO que un ciclo nunca termina, CUANDO supera las 10.000 repeticiones, ENTONCES el sistema detiene la ejecución y muestra *"El programa se detuvo: parece haber un ciclo infinito"*.
+
+**Pantalla:** `/editor` — categoría "Ciclos" (rosa).
+**Componentes:** bloques contenedores con cuerpo anidado que crece al agregar bloques; contador de repeticiones visible durante la ejecución.
+**Casos borde:** ciclo con cuerpo vacío (permitido, no hace nada); ciclos anidados hasta dos niveles.
+**Fuera de alcance:** `romper`/`continuar`, ciclo "para cada" sobre listas.
+
+---
+
+# Épica D — Interacción por gestos y accesibilidad
+
+## HU01 — Ejecución mediante gestos (2) · Estudiante · P0
+
+**COMO** estudiante que interactúa con la aplicación
+**QUIERO** usar gestos con las manos para ejecutar comandos
+**PARA** interactuar con la plataforma sin depender del teclado o el mouse.
+
+- **Criterio 1:** DADO que estoy en el editor con la cámara activa, CUANDO realizo uno de los gestos configurados y lo mantengo ~400 ms, ENTONCES el sistema lo reconoce y ejecuta el comando asociado (mover puntero, tomar/soltar bloque, cancelar, desplazar lienzo, eliminar o ejecutar).
+- **Criterio 2:** DADO que realizo un gesto no reconocido, CUANDO el sistema procesa el movimiento, ENTONCES no ejecuta ninguna acción y muestra el aviso *"Gesto no reconocido"* durante 2 segundos.
+- **Criterio 3:** DADO que la cámara está activa, CUANDO el sistema detecta mi mano, ENTONCES el panel muestra el vídeo con los puntos de la mano y el nombre del gesto actual.
+- **Criterio 4:** DADO que niego el permiso de cámara o no hay cámara disponible, CUANDO abro el editor, ENTONCES el sistema me informa *"No detectamos cámara. Puedes seguir con el teclado"* y activa el modo teclado, sin bloquear la aplicación.
+
+**Pantalla:** panel de cámara dentro del editor (≈240×180 px, colapsable).
+**Componentes:** vista de vídeo espejada con los puntos de la mano, chip con el gesto detectado, anillo de progreso de confirmación alrededor del cursor, interruptor para activar/desactivar los gestos.
+**Estados obligatorios:** pidiendo permiso · sin cámara o permiso denegado · buscando mano · mano detectada con gesto.
+**Casos borde:** poca luz o mano fuera de cuadro (sugerir acercarse o mejorar la iluminación); dos manos en cuadro → usar solo la más cercana; el vídeo **nunca sale del navegador**.
+**Fuera de alcance:** que el usuario entrene o redefina sus propios gestos, gestos con dos manos, reconocimiento facial.
+
+---
+
+## HU18 — Modo teclado (3) · Estudiante · P0
+
+**COMO** estudiante que utiliza la plataforma
+**QUIERO** usar el teclado como método principal de control cuando no tengo cámara
+**PARA** poder interactuar con la plataforma sin depender del hand tracking.
+
+- **Criterio 1:** DADO que no hay cámara disponible, CUANDO interactúo con el editor, ENTONCES puedo ejecutar todas las acciones mediante el teclado.
+- **Criterio 2:** DADO que la cámara no está disponible, CUANDO intento trabajar, ENTONCES la plataforma continúa funcionando completamente en modo teclado, sin degradar ninguna funcionalidad.
+- **Criterio 3:** DADO que navego con el teclado, CUANDO cambio el foco entre paleta, lienzo y consola, ENTONCES el elemento enfocado muestra un anillo de foco visible en todo momento.
+- **Criterio 4:** DADO que quiero conocer los controles, CUANDO presiono `?`, ENTONCES se abre la guía de atajos y sus gestos equivalentes.
+
+**Equivalencias mínimas:** `Tab`/`Shift+Tab` cambiar de zona · flechas mover foco o bloque tomado · `Enter` tomar/soltar · `Esc` cancelar · `Supr` eliminar · `Ctrl/Cmd+Enter` ejecutar · `Ctrl/Cmd+S` guardar · `?` ayuda.
+**Casos borde:** los atajos no deben dispararse mientras se escribe dentro de un campo de texto; el orden de tabulación debe seguir el orden visual.
+**Fuera de alcance:** atajos personalizables por el usuario, control por voz.
+
+---
+
+## HU04 — Tutorial de gestos y atajos (0.6) · Todos · P1
+
+**COMO** estudiante que desea aprender a usar la aplicación
+**QUIERO** consultar una guía de los gestos y atajos disponibles
+**PARA** conocer las acciones que puedo realizar con cada uno.
+
+- **Criterio 1:** DADO que estoy en la guía, CUANDO consulto los gestos disponibles, ENTONCES veo cada gesto junto con la acción que ejecuta y su atajo de teclado equivalente.
+- **Criterio 2:** DADO que quiero aprender un gesto específico, CUANDO lo selecciono, ENTONCES el sistema muestra cómo realizarlo (ilustración o animación) y una descripción paso a paso.
+- **Criterio 3:** DADO que tengo la cámara activa, CUANDO practico un gesto en el modo de práctica, ENTONCES el sistema confirma si lo estoy realizando correctamente.
+
+**Pantalla:** `/estudiante/tutorial`, accesible también desde el editor con `?` y desde el menú de ayuda.
+**Componentes:** cuadrícula de tarjetas de gesto (icono grande + nombre + acción + atajo), panel de detalle al seleccionar, sección de práctica opcional con la cámara, y una sección de "Primeros pasos con los bloques".
+**Casos borde:** si no hay cámara, la sección de práctica se oculta y se destaca la tabla de atajos.
+**Fuera de alcance:** tutorial interactivo guiado dentro del editor, vídeos alojados externamente.
+
+---
+
+# Épica E — Experiencia general
+
+## HU16 — Interfaz visual e intuitiva (1.2) · Todos · P0
+
+**COMO** estudiante o profesor
+**QUIERO** una plataforma con un diseño intuitivo y coherente
+**PARA** usar sus funcionalidades de manera sencilla y agradable.
+
+- **Criterio 1:** DADO que uso la plataforma, CUANDO navego entre secciones, ENTONCES identifico dónde estoy y qué puedo hacer sin necesidad de explicación adicional.
+- **Criterio 2:** DADO que interactúo con la plataforma, CUANDO uso sus elementos visuales, ENTONCES mantienen un lenguaje coherente: mismos colores por categoría, misma tipografía, mismos patrones de botones y estados.
+- **Criterio 3:** DADO que una sección no tiene datos, CUANDO la abro, ENTONCES veo un estado vacío que explica la situación y sugiere una acción, nunca una pantalla en blanco.
+- **Criterio 4:** DADO que una acción está deshabilitada, CUANDO paso el cursor sobre ella, ENTONCES un tooltip explica por qué no está disponible.
+
+**Alcance transversal:** barra lateral que cambia según el rol, encabezado con migas de pan, estados de carga con skeletons, toasts de confirmación, manejo de errores con opción de reintentar.
+**Requisitos de accesibilidad:** contraste AA, foco visible, navegación completa por teclado, y **ninguna información transmitida solo por color** (cada categoría de bloque lleva además icono y nombre).
+**Fuera de alcance:** temas personalizables, multi-idioma, modo oscuro completo fuera del lienzo.
+
+---
+
+## Notas para el equipo
+
+- **Numeración:** HU11, HU12 y HU17 no existen en el backlog actual; la numeración se conserva
+  para no romper la trazabilidad con documentos previos.
+- **Historias completadas en esta revisión:** HU02, HU03, HU09 y HU10 estaban sin redactar; se
+  escribieron a partir de su título y del alcance definido en `proyect-info.mdc`. **Revísalas y
+  ajústalas** si el alcance previsto era distinto.
+- **Corrección:** el Criterio 1 de HU08 repetía por error el criterio de HU07 (asignación desde el
+  rol profesor); se reemplazó por el criterio correcto desde el rol estudiante.
+- **Orden de construcción sugerido:** HU14 → HU15 → HU16 → HU05 → HU03 → HU10 → HU09 → HU18 →
+  HU01 → HU04 → HU13 → HU07 → HU08 → HU06 → HU02.

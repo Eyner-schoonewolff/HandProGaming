@@ -1,0 +1,353 @@
+# HandProGaming — Contexto maestro del MVP (prompt base para v0.app / Lovable)
+
+> **Cómo usar este archivo:** es el contexto de referencia del proyecto. Para generar la
+> app, pega la sección **§13 Prompt de arranque** en v0/Lovable, y luego ve pidiendo
+> pantalla por pantalla usando §7 y el archivo `storys-user.mdc`. No pidas todo de una vez:
+> estas herramientas producen mejor resultado con 1 pantalla o 1 componente por iteración.
+
+---
+
+## 1. Qué es (pitch en 3 líneas)
+
+HandProGaming es una **plataforma web educativa para aprender lógica de programación mediante
+bloques visuales**, dirigida a estudiantes que aún no escriben código. Su diferenciador es que el
+lienzo de bloques puede controlarse con **gestos de la mano detectados por la cámara**
+(hand tracking), con **modo teclado equivalente** cuando no hay cámara disponible.
+Tiene tres roles: **Estudiante, Profesor y Administrador**.
+
+**No es un videojuego.** Es una herramienta de aula: el tono visual es educativo, limpio y
+amable, no arcade. Nada de puntajes tipo juego, vidas, ni efectos estridentes.
+
+---
+
+## 2. Alcance del MVP (lo más importante de este documento)
+
+### Dentro del MVP (constrúyelo)
+1. Autenticación: registro con selección de rol e inicio de sesión.
+2. Dashboards diferenciados por rol (Estudiante / Profesor / Administrador).
+3. Catálogo de cursos y matrícula del estudiante.
+4. Editor de bloques funcional: paleta, lienzo, conexión de bloques, ejecución con consola de salida.
+5. Actividades: el profesor crea y asigna; el estudiante resuelve en el editor y entrega.
+6. Retroalimentación del profesor sobre entregas, visible para el estudiante.
+7. Control por gestos con cámara (hand tracking) sobre el lienzo del editor.
+8. Modo teclado como alternativa completa al control por gestos.
+9. Tutorial/guía de gestos y atajos.
+10. Panel de administración de usuarios y cursos.
+
+### Fuera del MVP (NO lo construyas, ni lo insinúes en la UI)
+- Exportar a código real (Python/JS), depurador paso a paso avanzado, breakpoints.
+- Chat en vivo, videollamada, notificaciones push, correo electrónico.
+- Gamificación (ranking, medallas, monedas, niveles, avatares).
+- Entrenamiento o personalización de modelos de gestos por parte del usuario.
+- Multi-idioma, modo colaborativo en tiempo real, pagos, integración con LMS externos.
+
+### Supuestos de datos del MVP
+Usa **datos mock en memoria/localStorage** con usuarios semilla ya creados, para que la app sea
+navegable sin backend. Encapsula todo el acceso a datos en una capa `lib/data/*` con funciones
+async, de modo que cambiar a un backend real (Supabase/API) solo requiera reemplazar esa capa.
+
+**Usuarios semilla (login demo, mostrar botones de "entrar como…" en /login):**
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Estudiante | ana@demo.co | demo1234 |
+| Profesor | luis@demo.co | demo1234 |
+| Administrador | admin@demo.co | demo1234 |
+
+---
+
+## 3. Roles y permisos
+
+| Capacidad | Estudiante | Profesor | Admin |
+|---|:--:|:--:|:--:|
+| Registrarse / iniciar sesión | ✅ | ✅ | ✅ |
+| Ver catálogo y matricularse en cursos | ✅ | — | — |
+| Usar el editor de bloques y ejecutar programas | ✅ | ✅ (vista previa) | — |
+| Ver y entregar actividades asignadas | ✅ | — | — |
+| Ver retroalimentación recibida | ✅ | — | — |
+| Crear/editar cursos propios | — | ✅ | ✅ (todos) |
+| Crear actividades y asignarlas | — | ✅ | — |
+| Revisar entregas y dejar retroalimentación | — | ✅ | — |
+| Ver progreso de sus estudiantes | — | ✅ | ✅ (global) |
+| Gestionar usuarios y roles | — | — | ✅ |
+| Configurar gestos y modo de control | ✅ | ✅ | ✅ |
+
+Las rutas deben protegerse por rol: si un rol entra a una ruta que no le corresponde,
+redirigir a su propio dashboard (no mostrar error 403 crudo).
+
+---
+
+## 4. Stack técnico esperado
+
+**Para v0.app:** Next.js 15 (App Router) + TypeScript + Tailwind CSS + shadcn/ui + lucide-react.
+**Para Lovable:** React + Vite + TypeScript + Tailwind + shadcn/ui (Supabase opcional en fase 2).
+
+- Hand tracking: **MediaPipe Hand Landmarker** (`@mediapipe/tasks-vision`), cargado solo en el
+  cliente (`"use client"`, import dinámico, `ssr: false`). El vídeo **nunca se envía a un servidor**:
+  todo el procesamiento ocurre en el navegador.
+- Lienzo de bloques: implementación propia con divs posicionados en absoluto + drag por puntero
+  (no uses Blockly ni Scratch-blocks; deben poder controlarse por gestos y teclado).
+- Estado global ligero: React Context o Zustand.
+- Persistencia MVP: `localStorage` mediante la capa `lib/data/*`.
+
+---
+
+## 5. Modelo de datos (TypeScript)
+
+```ts
+type Rol = "estudiante" | "profesor" | "admin";
+
+interface Usuario { id: string; nombre: string; correo: string; rol: Rol; avatarUrl?: string; creadoEn: string; }
+
+interface Curso { id: string; nombre: string; descripcion: string; profesorId: string; codigo: string; color: string; totalActividades: number; }
+
+interface Matricula { id: string; cursoId: string; estudianteId: string; fecha: string; }
+
+interface Actividad {
+  id: string; cursoId: string; titulo: string; enunciado: string;
+  dificultad: "basica" | "intermedia" | "avanzada";
+  bloquesPermitidos: TipoBloque[];      // limita la paleta durante la actividad
+  fechaLimite?: string;
+}
+
+interface Asignacion { id: string; actividadId: string; estudianteId: string; estado: "pendiente" | "en_progreso" | "entregada" | "revisada"; asignadaEn: string; }
+
+interface Entrega { id: string; asignacionId: string; programa: Programa; salida: string[]; entregadaEn: string; }
+
+interface Retroalimentacion { id: string; entregaId: string; profesorId: string; comentario: string; calificacion?: number; creadaEn: string; }
+
+// --- Programa de bloques ---
+type TipoBloque = "inicio" | "fin" | "variable" | "asignacion" | "entrada" | "salida"
+                | "operacion" | "condicional" | "mientras" | "repetir";
+
+interface Bloque {
+  id: string; tipo: TipoBloque; x: number; y: number;
+  parametros: Record<string, string | number>;  // p.ej. { nombre: "n", valor: 5 }
+  siguienteId: string | null;                   // conexión secuencial
+  hijosId?: string[];                           // cuerpo de condicional/ciclo
+}
+
+interface Programa { id: string; bloques: Bloque[]; actualizadoEn: string; }
+```
+
+---
+
+## 6. El editor de bloques (núcleo del producto — descríbelo con detalle)
+
+**Layout de tres zonas** en `/editor` y dentro de una actividad:
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Barra superior: nombre del ejercicio · ▶ Ejecutar · Guardar · ⌨/✋   │
+├───────────────┬──────────────────────────────┬───────────────────────┤
+│ PALETA        │ LIENZO                       │ PANEL DERECHO         │
+│ (categorías   │ (bloques conectables,        │ · Cámara + estado del │
+│  colapsables) │  cuadrícula, zoom)           │   gesto detectado     │
+│               │                              │ · Consola de salida   │
+│               │                              │ · Enunciado (si es    │
+│               │                              │   una actividad)      │
+└───────────────┴──────────────────────────────┴───────────────────────┘
+```
+
+**Bloques del MVP y su forma visual (cada categoría con su color):**
+
+| Bloque | Categoría / color | Parámetros | Regla de conexión |
+|---|---|---|---|
+| Inicio | Control · verde | — | Solo salida inferior. Único por programa. |
+| Fin | Control · verde | — | Solo entrada superior. Único por programa. |
+| Declarar variable | Datos · naranja | nombre, valor inicial | Encaja en secuencia |
+| Asignar | Datos · naranja | variable, expresión | Encaja en secuencia |
+| Leer (entrada) | E/S · azul | variable destino | Encaja en secuencia |
+| Mostrar (salida) | E/S · azul | expresión o texto | Encaja en secuencia |
+| Operación matemática | Operadores · morado | a, operador (+ − × ÷ %), b | Encaja en secuencia o como expresión |
+| Si / Si-No | Control · verde | condición | Contenedor con cuerpo(s) anidado(s) |
+| Mientras | Ciclos · rosa | condición | Contenedor con cuerpo |
+| Repetir N veces | Ciclos · rosa | número de repeticiones | Contenedor con cuerpo |
+
+**Reglas de conexión que la UI debe hacer evidentes:**
+- Al arrastrar un bloque cerca de un punto de anclaje válido, mostrar una **guía fantasma** y hacer *snap*.
+- Si la conexión no es válida (p. ej. algo encima de "Inicio"), el bloque **rebota** a su posición y se muestra un aviso corto: *"Ese bloque no puede ir ahí"*.
+- Un programa es ejecutable solo si existe `Inicio`, existe `Fin` y todos los bloques están conectados a la cadena principal. Si no, el botón **Ejecutar** está deshabilitado con tooltip explicando qué falta.
+
+**Ejecución:** intérprete simple en el cliente que recorre la cadena desde `Inicio`, evalúa los
+bloques y escribe en la **consola de salida** con resaltado del bloque activo. Si un bloque
+`Leer` requiere un dato, abrir un diálogo pidiendo el valor. Protección contra ciclos infinitos:
+detener a las 10.000 iteraciones con el mensaje *"El programa se detuvo: parece haber un ciclo infinito"*.
+
+---
+
+## 7. Mapa de pantallas y rutas
+
+**Públicas**
+- `/` — Landing corta: qué es, cómo funciona (3 pasos), CTA a registro. Con demo visual del lienzo.
+- `/login` — Correo + contraseña, errores en línea, botones de acceso demo por rol.
+- `/registro` — Nombre, correo, contraseña, **selector de rol obligatorio** (tarjetas Estudiante / Profesor / Administrador con descripción de cada uno).
+
+**Estudiante**
+- `/estudiante` — Dashboard: actividades pendientes, cursos matriculados, progreso, retroalimentación reciente.
+- `/estudiante/cursos` — Cursos matriculados + catálogo con botón **Matricularme** (deshabilitado y con etiqueta "Ya inscrito" si corresponde).
+- `/estudiante/cursos/[cursoId]` — Detalle: descripción, actividades del curso y estado de cada una.
+- `/estudiante/actividades` — Lista filtrable por estado: Pendiente / En progreso / Entregada / Revisada.
+- `/estudiante/actividades/[id]` — **Editor de bloques** con el enunciado al costado y botón **Entregar**.
+- `/estudiante/progreso` — Actividades completadas, conceptos practicados, historial de entregas.
+- `/estudiante/tutorial` — Guía de gestos y atajos (ver §8).
+- `/editor` — Lienzo libre para practicar sin actividad asociada.
+
+**Profesor**
+- `/profesor` — Dashboard: cursos, entregas por revisar, actividad reciente.
+- `/profesor/cursos` y `/profesor/cursos/[id]` — Gestión de cursos y lista de estudiantes matriculados.
+- `/profesor/actividades/nueva` — Formulario: título, enunciado, dificultad, bloques permitidos (multiselección), fecha límite.
+- `/profesor/actividades/[id]` — Detalle y **asignación**: tabla de estudiantes con casillas + botón "Asignar a N estudiantes".
+- `/profesor/entregas` — Bandeja de entregas por revisar.
+- `/profesor/entregas/[id]` — Programa entregado en modo lectura + salida obtenida + formulario de retroalimentación (comentario y calificación opcional).
+- `/profesor/estudiantes` — Progreso por estudiante.
+
+**Administrador**
+- `/admin` — Métricas: total de usuarios por rol, cursos, actividades.
+- `/admin/usuarios` — Tabla con buscador: crear, editar rol, activar/desactivar.
+- `/admin/cursos` — Tabla de todos los cursos con su profesor asignado.
+
+**Transversal**
+- `/configuracion` — Modo de control (gestos / teclado / automático), permiso de cámara, sensibilidad, perfil.
+
+---
+
+## 8. Control por gestos (hand tracking)
+
+**Panel de cámara** (esquina del panel derecho del editor, ~240×180 px, colapsable):
+muestra el vídeo espejado, los puntos de la mano detectada y una etiqueta con el gesto actual.
+
+**Gestos del MVP (exactamente estos seis):**
+
+| Gesto | Acción | Retroalimentación visual |
+|---|---|---|
+| ✋ Mano abierta | Mover el puntero por el lienzo | Cursor circular siguiendo la mano |
+| 🤏 Pinza (índice + pulgar juntos) | Tomar / soltar el bloque bajo el puntero | El bloque se eleva con sombra |
+| ✊ Puño cerrado | Cancelar la acción actual | Halo rojo breve |
+| ☝️ Índice arriba | Desplazar (pan) el lienzo | Cursor de mano de arrastre |
+| ✌️ Dos dedos | Eliminar el bloque seleccionado | Diálogo de confirmación |
+| 👍 Pulgar arriba | Ejecutar el programa | Botón Ejecutar destella |
+
+**Reglas de la experiencia de gestos:**
+- **Confirmación por permanencia:** un gesto solo dispara la acción tras mantenerse ~400 ms; muestra un anillo de progreso alrededor del cursor. Evita disparos accidentales.
+- **Gesto no reconocido:** no ejecutar nada; mostrar el chip *"Gesto no reconocido"* en el panel de cámara durante 2 s. Nunca ejecutar una acción "parecida".
+- **Estados del panel de cámara** (los cuatro deben existir en la UI): `pidiendo permiso` · `sin cámara / permiso denegado` · `buscando mano` · `mano detectada + gesto X`.
+- **Sin cámara o permiso denegado:** mostrar un aviso no bloqueante *"No detectamos cámara. Puedes seguir con el teclado"* y activar el modo teclado automáticamente. **La plataforma debe ser 100% usable sin cámara.**
+- Los gestos **complementan** el mouse y el teclado; nunca los reemplazan ni deshabilitan.
+
+---
+
+## 9. Modo teclado (equivalencia completa)
+
+Debe existir para cada gesto un atajo equivalente, visible con la tecla `?`:
+
+| Tecla | Acción |
+|---|---|
+| `Tab` / `Shift+Tab` | Cambiar de zona: Paleta → Lienzo → Consola |
+| `↑ ↓ ← →` | Mover el foco entre bloques (o mover el bloque tomado) |
+| `Enter` | Tomar el bloque enfocado / soltarlo en la posición actual |
+| `Esc` | Cancelar la acción en curso |
+| `Supr` / `Backspace` | Eliminar el bloque seleccionado |
+| `Ctrl/Cmd + Enter` | Ejecutar el programa |
+| `Ctrl/Cmd + S` | Guardar |
+| `?` | Abrir la guía de gestos y atajos |
+
+El bloque enfocado siempre debe tener un **anillo de foco visible**. Todo debe ser operable
+sin mouse.
+
+---
+
+## 10. Dirección de diseño
+
+- **Tono:** educativo, claro, moderno y amable. Aire limpio, esquinas redondeadas (`rounded-xl`),
+  sombras suaves. Se ve como una herramienta de aprendizaje seria, no como un juego.
+- **Color:** base neutra (blanco / `slate-50`, con modo oscuro para el lienzo). Primario **índigo**;
+  acento **turquesa**. Los colores fuertes se reservan para las **categorías de bloques**
+  (verde control, naranja datos, azul E/S, morado operadores, rosa ciclos), que deben ser
+  consistentes entre paleta, lienzo y leyendas del tutorial.
+- **Tipografía:** sans-serif geométrica para la interfaz; **monoespaciada** para la consola de salida
+  y los valores dentro de los bloques.
+- **Iconografía:** lucide-react. Los gestos se ilustran con tarjetas que muestran una mano y su acción.
+- **Accesibilidad (requisito, no adorno):** contraste AA, foco visible, navegación completa por teclado,
+  `aria-label` en los controles del lienzo, y **nunca comunicar información solo por color**
+  (cada categoría de bloque lleva también un icono y su nombre).
+- **Responsive:** el editor está pensado para escritorio (≥1024 px). En tablet la paleta se vuelve un
+  cajón lateral; en móvil se muestran los dashboards y consultas, y el editor sugiere usar una pantalla mayor.
+
+---
+
+## 11. Estados obligatorios en cada pantalla
+
+No entregues pantallas que solo funcionen con datos ideales. Cada lista o formulario debe cubrir:
+- **Cargando:** skeletons, no spinners de pantalla completa.
+- **Vacío:** ilustración o icono + frase explicativa + acción sugerida
+  (p. ej. *"Aún no tienes actividades asignadas. Explora tus cursos"*).
+- **Error:** mensaje comprensible + botón "Reintentar".
+- **Éxito:** toast breve tras guardar, entregar, asignar o matricularse.
+- **Deshabilitado:** con tooltip que explique **por qué** (regla clave del editor).
+
+---
+
+## 12. Criterios de aceptación del MVP
+
+El MVP está listo cuando se puede recorrer, sin código muerto ni pantallas en blanco:
+1. Registrarse como Profesor → crear curso → crear actividad → asignarla a un estudiante.
+2. Registrarse como Estudiante → matricularse al curso → ver la actividad asignada.
+3. Abrir la actividad, armar un programa con bloques (incluyendo un condicional y un ciclo),
+   ejecutarlo, ver la salida en consola y entregarlo.
+4. Hacer los pasos anteriores **solo con teclado**, sin tocar el mouse.
+5. Activar la cámara, mover y conectar un bloque con gestos y ejecutar con 👍.
+6. Volver como Profesor → revisar la entrega → dejar retroalimentación.
+7. Volver como Estudiante → ver la retroalimentación en la actividad.
+8. Entrar como Administrador → ver y gestionar usuarios y cursos.
+
+---
+
+## 13. Prompt de arranque (copiar y pegar en v0.app / Lovable)
+
+> Construye **HandProGaming**, una plataforma web educativa en español para aprender lógica de
+> programación mediante **bloques visuales**, con **Next.js (App Router) + TypeScript + Tailwind +
+> shadcn/ui + lucide-react**. Tres roles: Estudiante, Profesor y Administrador.
+>
+> Su diferenciador: el lienzo de bloques puede controlarse con **gestos de la mano captados por la
+> cámara** (MediaPipe Hand Landmarker, todo en el navegador, sin enviar vídeo a ningún servidor), y
+> existe un **modo teclado equivalente** para cuando no hay cámara. Todo debe ser usable sin cámara.
+>
+> Usa **datos mock en `lib/data/*`** con usuarios semilla (ana@demo.co estudiante, luis@demo.co
+> profesor, admin@demo.co administrador; contraseña `demo1234`) y botones de acceso demo en /login.
+>
+> Estética: educativa, limpia y moderna — **no es un videojuego**. Base neutra, primario índigo,
+> acento turquesa; los colores fuertes se reservan para las categorías de bloques (verde control,
+> naranja datos, azul entrada/salida, morado operadores, rosa ciclos). Accesible: contraste AA,
+> foco visible y navegación completa por teclado.
+>
+> **Empieza por esta primera entrega:** la landing `/`, `/login` y `/registro` (con selector de rol
+> en tarjetas), el layout de la app con barra lateral que cambia según el rol, y el dashboard del
+> estudiante `/estudiante` con tarjetas de actividades pendientes, cursos matriculados y progreso.
+> Incluye estados de carga, vacío y error en cada lista.
+>
+> Después continuaré pidiéndote el editor de bloques, el panel de gestos y los paneles de profesor y
+> administrador.
+
+**Orden sugerido de las siguientes iteraciones** (una por prompt):
+1. Layout + landing + login + registro
+2. Dashboard estudiante + cursos + matrícula
+3. **Editor de bloques**: paleta, lienzo, conexión con snap, consola (con mouse y teclado)
+4. Intérprete de ejecución + resaltado del bloque activo + manejo de errores
+5. Panel de cámara + hand tracking + los seis gestos + confirmación por permanencia
+6. Tutorial de gestos y atajos
+7. Panel del profesor: cursos, crear actividad, asignar
+8. Entregas y retroalimentación (profesor ↔ estudiante)
+9. Panel de administración
+10. Configuración, progreso y pulido de accesibilidad
+
+---
+
+## 14. Qué NO hacer (errores frecuentes de los generadores)
+
+- ❌ No uses Blockly, Scratch-blocks ni una librería de nodos genérica: el lienzo debe ser propio para poder controlarse con gestos y teclado.
+- ❌ No conviertas la app en un juego con puntajes, vidas, medallas o sonidos.
+- ❌ No hagas que los gestos sean la única forma de interactuar, ni bloquees la app si no hay cámara.
+- ❌ No envíes el vídeo ni las imágenes de la cámara a un servidor ni a una API externa.
+- ❌ No dejes pantallas de relleno, botones sin destino ni menús con opciones inexistentes.
+- ❌ No inventes funcionalidades fuera de §2 (chat, exportar a Python, ranking, pagos).
+- ❌ No mezcles idiomas en la interfaz: **toda la UI visible va en español**.
