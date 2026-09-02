@@ -395,7 +395,7 @@ export default function BlockEditor({ programa, setPrograma, bloquesPermitidos, 
             )}
             {onEntregar && (
               <button
-                onClick={onEntregar}
+                onClick={() => onEntregar(programa)}
                 disabled={!validacion.ok}
                 title={validacion.ok ? "Entregar actividad" : validacion.faltan.join(" · ")}
                 className="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 disabled:bg-slate-300"
