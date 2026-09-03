@@ -4,7 +4,7 @@
  * El MVP funciona con datos locales (ver src/lib/AppContext.jsx), así que este
  * cliente solo cubre las pantallas de plataforma: sesión, recuperación de
  * contraseña y la página 404. Cuando exista un backend real, basta con
- * reemplazar estas funciones por llamadas HTTP.
+ * reemplazar estas funciones por llamadas HTTPS.
  */
 import { leer, escribir } from "@/lib/storage";
 import { appParams } from "@/lib/app-params";
